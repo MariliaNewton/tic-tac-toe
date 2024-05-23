@@ -1,64 +1,80 @@
-function player(sign) {
-  return { sign };
+class Player {
+  constructor(sign) {
+    this.sign = sign;
+  }
+  getSign() {
+    return this.sign;
+  }
 }
 
-const displayController = (function () {
-  const board = document.querySelector(".gameboard-container");
-  const message = document.querySelector(".announcement");
-  const restart = document.querySelector(".btn-restart");
+class DisplayController {
+  constructor() {
+    this.board = document.querySelector(".gameboard-container");
+    this.message = document.querySelector(".announcement");
+    this.restart = document.querySelector(".btn-restart");
 
-  board.addEventListener("click", function (e) {
-    if (
-      !e.target.classList.contains("gameboard-unit") ||
-      e.target.textContent !== "" ||
-      gameController.getIsOver()
-    )
-      return;
-    e.target.classList.add(`player${gameController.getCurPlayerSign()}`);
-    e.target.textContent = gameController.getCurPlayerSign();
-    gameController.playRound(e.target.dataset.index);
-  });
+    this.addEvListeners();
+  }
 
-  const displayMessage = (msg) => (message.textContent = msg);
-
-  restart.addEventListener("click", function () {
-    gameBoard.resetBoard();
-    gameController.restartGame();
-    [...board.children].forEach((unit) => {
-      unit.textContent = "";
-      unit.classList.remove("playerX");
-      unit.classList.remove("playerO");
+  addEvListeners() {
+    this.board.addEventListener("click", (e) => {
+      if (
+        !e.target.classList.contains("gameboard-unit") ||
+        e.target.textContent !== "" ||
+        gameController.getIsOver()
+      )
+        return;
+      e.target.classList.add(`player${gameController.getCurPlayerSign()}`);
+      e.target.textContent = gameController.getCurPlayerSign();
+      gameController.playRound(e.target.dataset.index);
     });
-    displayMessage(`Player ${gameController.getCurPlayerSign()}'s turn`);
-  });
-  return { displayMessage };
-})();
 
-const gameController = (function () {
-  const playerX = player("X");
-  const playerO = player("O");
-  let round = 1;
-  let isOver = false;
+    this.restart.addEventListener("click", () => {
+      gameBoard.resetBoard();
+      gameController.restartGame();
+      [...this.board.children].forEach((unit) => {
+        unit.textContent = "";
+        unit.classList.remove("playerX");
+        unit.classList.remove("playerO");
+      });
+      this.displayMessage(`Player ${gameController.getCurPlayerSign()}'s turn`);
+    });
+  }
 
-  const playRound = (boardIndex) => {
-    gameBoard.setUnit(boardIndex, getCurPlayerSign());
-    if (checkWinner(boardIndex)) {
-      isOver = true;
-      displayController.displayMessage(`Player ${getCurPlayerSign()} won!`);
+  displayMessage(msg) {
+    this.message.textContent = msg;
+  }
+}
+
+class GameController {
+  constructor() {
+    this.playerX = new Player("X");
+    this.playerO = new Player("O");
+    this.round = 1;
+    this.isOver = false;
+  }
+
+  playRound(boardIndex) {
+    gameBoard.setUnit(boardIndex, this.getCurPlayerSign());
+    if (this.checkWinner(boardIndex)) {
+      this.isOver = true;
+      displayController.displayMessage(
+        `Player ${this.getCurPlayerSign()} won!`
+      );
       return;
     }
-    if (round === 9) {
-      isOver = true;
+    if (this.round === 9) {
+      this.isOver = true;
       displayController.displayMessage(`It's a draw!`);
       return;
     }
-    round++;
+    this.round++;
     displayController.displayMessage(
-      `Player ${gameController.getCurPlayerSign()}'s turn`
+      `Player ${this.getCurPlayerSign()}'s turn`
     );
-  };
+  }
 
-  const checkWinner = (boardIndex) => {
+  checkWinner(boardIndex) {
     const winnerCombos = [
       [0, 1, 2],
       [3, 4, 5],
@@ -74,40 +90,45 @@ const gameController = (function () {
       .filter((combo) => combo.includes(+boardIndex))
       .some((possibleCombo) =>
         possibleCombo.every(
-          (index) => gameBoard.getUnit(index) === getCurPlayerSign()
+          (index) => gameBoard.getUnit(index) === this.getCurPlayerSign()
         )
       );
-  };
+  }
 
-  const getIsOver = () => {
-    return isOver;
-  };
+  getIsOver() {
+    return this.isOver;
+  }
 
-  const getCurPlayerSign = () =>
-    round % 2 === 1 ? playerX.sign : playerO.sign;
+  getCurPlayerSign() {
+    return this.round % 2 === 1
+      ? this.playerX.getSign()
+      : this.playerO.getSign();
+  }
 
-  const restartGame = () => {
-    round = 1;
-    isOver = false;
-  };
+  restartGame() {
+    this.round = 1;
+    this.isOver = false;
+  }
+}
 
-  return { playRound, getIsOver, getCurPlayerSign, restartGame };
-})();
+class GameBoard {
+  constructor() {
+    this.board = ["", "", "", "", "", "", "", "", ""];
+  }
 
-const gameBoard = (function () {
-  const board = ["", "", "", "", "", "", "", "", ""];
-
-  const setUnit = (index, sign) => {
-    board[index] = sign;
-  };
-  const getUnit = (index) => {
-    return board[index];
-  };
-  const resetBoard = () => {
-    for (let i = 0; i < board.length; i++) {
-      board[i] = "";
+  setUnit(index, sign) {
+    this.board[index] = sign;
+  }
+  getUnit(index) {
+    return this.board[index];
+  }
+  resetBoard() {
+    for (let i = 0; i < this.board.length; i++) {
+      this.board[i] = "";
     }
-  };
+  }
+}
 
-  return { setUnit, getUnit, resetBoard, board };
-})();
+const gameBoard = new GameBoard();
+const gameController = new GameController();
+const displayController = new DisplayController();
